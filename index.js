@@ -1,11 +1,14 @@
-import express from "express";
 import cors from "cors";
-import { errorHandler } from "./middlewares/errorHandler.js";
-import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/user.js";
 import dotenv from "dotenv";
-import corsOptions from "./config/corsOptions.js";
+import express from "express";
+
+import authRoutes from "./routes/auth.js";
+import movieRoutes from "./routes/movies.js";
+import userRoutes from "./routes/user.js";
+
 import { initDB } from "./utils/dbInitialize.js";
+import corsOptions from "./config/corsOptions.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 dotenv.config();
@@ -20,6 +23,7 @@ app.use(express.json());
 app.use(cors(corsOptions));
 
 app.use("/user", userRoutes);
+app.use("/movie", movieRoutes);
 app.use("/auth", authRoutes);
 app.use(errorHandler);
 
