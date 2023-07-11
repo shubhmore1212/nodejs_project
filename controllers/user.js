@@ -27,7 +27,6 @@ export const createUser = tryCatch(async (req, res) => {
   const passwordHash = await bcrypt.hash(password, salt);
 
   const result = await addUser({ name, username, passwordHash });
-  delete result["passwordHash"];
 
   return response(res, 200, result);
 });

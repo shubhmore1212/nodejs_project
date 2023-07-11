@@ -7,6 +7,7 @@ export const addUser = async (payload) => {
   });
 
   return {
+    status: 200,
     message: "User created sucessfully",
   };
 };

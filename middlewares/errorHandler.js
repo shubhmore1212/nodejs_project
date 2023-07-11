@@ -11,13 +11,14 @@ export const errorHandler = (error, req, res, next) => {
   if (name === "ValidationError") {
     return response(res, 422, {
       name: "Validation Error",
+      status: 422,
       message: error.details.map((e) => e.message),
     });
   }
 
   if (error instanceof Error) {
-    return response(res, statusCode, { name, message });
+    return response(res, statusCode, { name, status: statusCode, message });
   }
 
-  return response(res, statusCode, { name, message });
+  return response(res, statusCode, { name, status: statusCode, message });
 };

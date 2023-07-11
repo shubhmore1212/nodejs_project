@@ -20,7 +20,6 @@ export const loginUser = async (payload) => {
       expiresIn: "1d",
     }
   );
-  delete user.dataValues["password"];
 
-  return { authToken, message: "Login Successfull" };
+  return { status: 200, authToken, message: "Login Successfull" };
 };
