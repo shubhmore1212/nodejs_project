@@ -6,7 +6,7 @@ export const errorHandler = (error, req, res, next) => {
   const message = error.message;
   const stack = error.stack;
 
-  console.error("ERROR", stack);
+  // console.error("ERROR", stack);
 
   if (name === "ValidationError") {
     return response(res, 422, {

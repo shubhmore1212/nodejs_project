@@ -16,10 +16,8 @@ export const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return response(res, 400, { message: "Invalid Token" });
-    }
+    const { statusCode: status, message } = error;
 
-    response(res, error.statusCode, { message: error.message });
+    response(res, status, { status, message });
   }
 };
