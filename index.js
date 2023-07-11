@@ -10,7 +10,7 @@ import { initDB } from "./utils/dbInitialize.js";
 import corsOptions from "./config/corsOptions.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
-const app = express();
+export const app = express();
 dotenv.config();
 const PORT = process.env.PORT || 8001;
 
