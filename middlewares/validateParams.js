@@ -18,6 +18,10 @@ export const updateUserSchema = Joi.object({
   id: Joi.number().required(),
 });
 
+export const movieSearchSchema = Joi.object({
+  movie_name: Joi.string().trim().required(),
+});
+
 export const checkForError = (error) => {
   if (error) throw error;
 };
