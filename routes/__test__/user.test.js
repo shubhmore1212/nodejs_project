@@ -6,6 +6,19 @@ dotenv.config();
 
 const { app } = require("../../index.js");
 
+const movie = {
+  Title: "Z",
+  Year: "1969",
+  Rated: "M/PG",
+  Released: "08 Dec 1969",
+  Runtime: "127 min",
+  Genre: "Crime, Drama, Thriller",
+  Director: "Costa-Gavras",
+  Writer: "Vassilis Vassilikos, Jorge Semprún, Costa-Gavras",
+  Actors: "Yves Montand, Irene Papas, Jean-Louis Trintignant",
+  Plot: "The public murder of a prominent politician and doctor amid a violent demonstration is covered up by military and government officials. A tenacious magistrate is determined not to let them get away with it.",
+};
+
 const authToken = jwt.sign(
   { username: "username", password: "password" },
   process.env.JWT_SECRET,
@@ -21,6 +34,22 @@ jest.mock("../../services/user.js", () => ({
   }),
 }));
 
+jest.mock("../../services/auth.js", () => ({
+  loginUser: jest.fn().mockResolvedValue({
+    status: 200,
+    authToken: "jwt",
+    message: "Login Successfull",
+  }),
+}));
+
+jest.mock("../../services/movie.js", () => ({
+  searchMovie: jest.fn().mockResolvedValue({
+    status: 200,
+    message: movie,
+  }),
+  insertMovie: jest.fn().mockResolvedValue(movie),
+}));
+
 describe("POST User /create", () => {
   it("should respond with 200 for success", async () => {
     const response = await request(app).post("/user/create").send({
@@ -28,8 +57,8 @@ describe("POST User /create", () => {
       username: "shubh@gmail.com",
       password: "shubh@123",
     });
-    console.log("200 object", response.body);
     expect(response.statusCode).toBe(200);
+    expect(response.body.data[0].message).toEqual("User created sucessfully");
   });
 
   it("should respond with 422 if the user sends invalid body", async () => {
@@ -72,14 +101,6 @@ describe("POST User /create", () => {
   });
 });
 
-jest.mock("../../services/auth.js", () => ({
-  loginUser: jest.fn().mockResolvedValue({
-    status: 200,
-    authToken: "jwt",
-    message: "Login Successfull",
-  }),
-}));
-
 describe("Auth POST /auth/login", () => {
   it("should respond with 200 on sucessfull login", async () => {
     const response = await request(app).post("/auth/login").send({
@@ -88,6 +109,7 @@ describe("Auth POST /auth/login", () => {
     });
 
     expect(response.statusCode).toBe(200);
+    expect(response.body.data[0].message).toEqual("Login Successfull");
   });
 
   it("should respond with 422 if the user sends invalid body ", async () => {
@@ -122,53 +144,6 @@ describe("Auth POST /auth/login", () => {
   });
 });
 
-jest.mock("../../services/movie.js", () => ({
-  searchMovie: jest.fn().mockResolvedValue({
-    status: 200,
-    message: {
-      Ratings: [
-        {
-          Source: "Internet Movie Database",
-          Value: "8.2/10",
-        },
-        {
-          Source: "Rotten Tomatoes",
-          Value: "94%",
-        },
-        {
-          Source: "Metacritic",
-          Value: "86/100",
-        },
-      ],
-      Title: "Z",
-      Year: "1969",
-      Rated: "M/PG",
-      Released: "08 Dec 1969",
-      Runtime: "127 min",
-      Genre: "Crime, Drama, Thriller",
-      Director: "Costa-Gavras",
-      Writer: "Vassilis Vassilikos, Jorge Semprún, Costa-Gavras",
-      Actors: "Yves Montand, Irene Papas, Jean-Louis Trintignant",
-      Plot: "The public murder of a prominent politician and doctor amid a violent demonstration is covered up by military and government officials. A tenacious magistrate is determined not to let them get away with it.",
-      Language: "French, Russian, English",
-      Country: "France, Algeria",
-      Awards: "Won 2 Oscars. 12 wins & 13 nominations total",
-      Poster:
-        "https://m.media-amazon.com/images/M/MV5BNDQ4ZTI5NTktOTY2ZS00NmM3LWE2ZTAtMTdjNzFmOWYzYzhkXkEyXkFqcGdeQXVyNjMwMjk0MTQ@._V1_SX300.jpg",
-      Metascore: "86",
-      imdbRating: "8.2",
-      imdbVotes: "30,020",
-      imdbID: "tt0065234",
-      Type: "movie",
-      DVD: "27 Oct 2009",
-      BoxOffice: "$83,305",
-      Production: "N/A",
-      Website: "N/A",
-      Response: "True",
-    },
-  }),
-}));
-
 describe("Movie GET /movie/search", () => {
   it("should respond with 200 for success", async () => {
     const response = await request(app)
@@ -179,6 +154,7 @@ describe("Movie GET /movie/search", () => {
       .set("Authorization", authToken);
 
     expect(response.statusCode).toBe(200);
+    expect(response.body.data[0].message).toEqual(movie);
   });
 
   it("should respond with 401 for success", async () => {
@@ -187,14 +163,39 @@ describe("Movie GET /movie/search", () => {
     });
 
     expect(response.statusCode).toBe(401);
+    expect(response.body.data[0].message).toEqual("Access Denied");
   });
 
-  // it("should respond with 200 for success", async () => {
-  //   const response = await request(app)
-  //     .get("/movie/search")
-  //     .send({})
-  //     .set("Authorization", authToken);
+  it("should respond with 422 for unprocessable body", async () => {
+    const objects = [{}, { movie_name: "" }, { movie_name: "  " }];
 
-  //   expect(response.statusCode).toBe(422);
-  // });
+    for (let object of objects) {
+      const response = await request(app)
+        .get("/movie/search")
+        .send(object)
+        .set("Authorization", authToken);
+
+      expect(response.statusCode).toBe(422);
+      expect(response.body.data[0].name).toEqual("Validation Error");
+    }
+  });
+});
+
+describe("Movie POST /movie/create", () => {
+  it("should respond with 200 for success", async () => {
+    const response = await request(app)
+      .post("/movie/create")
+      .send(movie)
+      .set("Authorization", authToken);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({ data: [movie] });
+  });
+
+  it("should respond with 401 if token not present", async () => {
+    const response = await request(app).post("/movie/create").send(movie);
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.data[0].message).toEqual("Access Denied");
+  });
 });
